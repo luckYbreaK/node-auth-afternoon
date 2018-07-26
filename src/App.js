@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import './App.css';
 
+require('dotenv').config();
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -27,14 +29,23 @@ class App extends Component {
   }
 
   login() {
-    alert('set up your login function here')
+    // alert('set up your login function here')
+    const { REACT_APP_AUTH0_DOMAIN, REACT_APP_AUTH0_CLIENT_ID } = process.env;
+    const baseUrl = `https://${REACT_APP_AUTH0_DOMAIN}`;
+    const encodedUri = encodeURIComponent(`${window.location.origin}/callback`);
+    const redirectUrl = baseUrl +
+      `/authorize?client_id=${REACT_APP_AUTH0_CLIENT_ID}` +
+      `&scope=openid%20profile%20email` +
+      `&redirect_uri=${encodedUri}` +
+      `&response_type=code`;
+    window.location = redirectUrl;
   }
 
   logout() {
     axios.post('/api/logout').then(response => {
       this.setState({
         message: response.data,
-        user:''
+        user: ''
       });
     });
   }
@@ -45,7 +56,7 @@ class App extends Component {
       .then(() => this.setState({ message: 'Successfully starred repo' }))
       .catch(error => this.setState({ message: error.message }));
   }
-    
+
   unstar() {
     this.setState({ message: 'Unstarring...' });
     axios.delete(`/api/star?gitUser=${this.state.gitUser}&gitRepo=${this.state.gitRepo}`)
@@ -59,26 +70,26 @@ class App extends Component {
         <div>
           {this.state.user
             ? <div>
-                <div className='user-image-container'>
-                  <img src={this.state.user.picture} alt="User" />
-                </div>
-
-                <p>{this.state.user.name}</p>
-
-                <input onChange={e => this.setState({ gitUser: e.target.value })} placeholder='Repo owner' value={this.state.gitUser}/>
-                <input onChange={e => this.setState({ gitRepo: e.target.value })} placeholder='Repo to star' value={this.state.gitRepo} />
-
-                <div>
-                  <button onClick={this.star}>Add star</button>
-                  <button onClick={this.unstar}>Unstar</button>
-                  <button onClick={this.logout}>Logout</button>
-                </div>
-                <div>{this.state.message}</div>
+              <div className='user-image-container'>
+                <img src={this.state.user.picture} alt="User" />
               </div>
+
+              <p>{this.state.user.name}</p>
+
+              <input onChange={e => this.setState({ gitUser: e.target.value })} placeholder='Repo owner' value={this.state.gitUser} />
+              <input onChange={e => this.setState({ gitRepo: e.target.value })} placeholder='Repo to star' value={this.state.gitRepo} />
+
+              <div>
+                <button onClick={this.star}>Add star</button>
+                <button onClick={this.unstar}>Unstar</button>
+                <button onClick={this.logout}>Logout</button>
+              </div>
+              <div>{this.state.message}</div>
+            </div>
             : <div>
-                <p>Please login</p>
-                <button onClick={this.login}>Login</button>
-              </div>
+              <p>Please login</p>
+              <button onClick={this.login}>Login</button>
+            </div>
           }
         </div>
       </div>
